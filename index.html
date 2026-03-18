@@ -4242,6 +4242,368 @@ authInit();
 loadS().then(()=>updateAll());
 window.addEventListener('resize', ()=>{ if(document.getElementById('view-simulacro').classList.contains('active')) renderSimTable(); });
 </script>
+
+<script type="module">
+  // ══════════════════════════════════════════════════════════
+  //  FIREBASE AUTH REAL — reemplaza la autenticación casera
+  // ══════════════════════════════════════════════════════════
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  import { getAnalytics, isSupported as analyticsIsSupported } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
+  import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    updateProfile,
+    onAuthStateChanged,
+    signOut,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    updatePassword
+  } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+  // Configuración oficial solicitada.
+  const firebaseConfig = {
+    apiKey: "AIzaSyB1A3M7jpH-mbFoW2ETneOyVhUKM1VIppk",
+    authDomain: "plan-podcast.firebaseapp.com",
+    databaseURL: "https://plan-podcast-default-rtdb.firebaseio.com",
+    projectId: "plan-podcast",
+    storageBucket: "plan-podcast.firebasestorage.app",
+    messagingSenderId: "479892816401",
+    appId: "1:479892816401:web:581d4a07a31872660c67b0",
+    measurementId: "G-NGE8HKFLJE"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  if (await analyticsIsSupported()) {
+    getAnalytics(app);
+  }
+
+  const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
+  googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+  // Estado de sesión en memoria. Ya no se usa localStorage para autenticar.
+  let authSession = null;
+
+  function buildSession(user) {
+    if (!user) return null;
+    return {
+      uid: user.uid,
+      name: user.displayName || '',
+      email: user.email || '',
+      google: user.providerData.some(p => p.providerId === 'google.com'),
+      providerIds: user.providerData.map(p => p.providerId)
+    };
+  }
+
+  function authGetSession() {
+    return authSession;
+  }
+
+  function authSetSession(user) {
+    authSession = user;
+    return authSession;
+  }
+
+  function authClearSession() {
+    authSession = null;
+    return null;
+  }
+
+  function hideLoginScreen() {
+    const ls = document.getElementById('login-screen');
+    if (ls) {
+      ls.style.transition = 'opacity .4s';
+      ls.style.opacity = '0';
+      setTimeout(() => ls.classList.add('hidden'), 400);
+    }
+  }
+
+  function showLoginScreen() {
+    const ls = document.getElementById('login-screen');
+    if (ls) {
+      ls.classList.remove('hidden');
+      ls.style.opacity = '1';
+    }
+  }
+
+  function _showAuthErr(el, msg) {
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => { if (el) el.style.display = 'none'; }, 4000);
+  }
+
+  function _show(el, msg) {
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => { if (el) el.style.display = 'none'; }, 3000);
+  }
+
+  function mapFirebaseAuthError(error, mode = 'login') {
+    const code = error?.code || '';
+    const byCode = {
+      'auth/invalid-email': 'Correo inválido.',
+      'auth/missing-password': 'Ingresa tu contraseña.',
+      'auth/user-not-found': 'No existe una cuenta con ese correo.',
+      'auth/wrong-password': 'Contraseña incorrecta.',
+      'auth/invalid-credential': mode === 'login'
+        ? 'Correo o contraseña incorrectos.'
+        : 'No fue posible autenticar la cuenta.',
+      'auth/email-already-in-use': 'Ya existe una cuenta con ese correo.',
+      'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+      'auth/popup-closed-by-user': 'Se cerró la ventana de Google antes de completar el acceso.',
+      'auth/popup-blocked': 'El navegador bloqueó la ventana emergente de Google.',
+      'auth/cancelled-popup-request': 'Se canceló la solicitud de acceso con Google.',
+      'auth/account-exists-with-different-credential': 'Ya existe una cuenta con este correo usando otro método de acceso.',
+      'auth/requires-recent-login': 'Por seguridad, vuelve a iniciar sesión para cambiar la contraseña.',
+      'auth/too-many-requests': 'Demasiados intentos. Inténtalo de nuevo en unos minutos.',
+      'auth/network-request-failed': 'No se pudo conectar con Firebase. Revisa tu conexión.'
+    };
+    return byCode[code] || error?.message || 'Ocurrió un error inesperado.';
+  }
+
+  function clearGoogleModalIfOpen() {
+    const modal = document.getElementById('google-oauth-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function syncConfigView() {
+    if (typeof window.loadCfgView === 'function') {
+      window.loadCfgView();
+    }
+  }
+
+  async function authInit() {
+    // onAuthStateChanged reemplaza por completo la sesión manual en localStorage.
+    onAuthStateChanged(auth, (user) => {
+      authSetSession(buildSession(user));
+      clearGoogleModalIfOpen();
+
+      if (user) {
+        hideLoginScreen();
+      } else {
+        showLoginScreen();
+      }
+
+      syncConfigView();
+    });
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('login-email')?.value.trim().toLowerCase() || '';
+    const pass = document.getElementById('login-pass')?.value || '';
+    const err = document.getElementById('login-err');
+    if (err) err.style.display = 'none';
+
+    if (!email || !pass) {
+      _showAuthErr(err, 'Completa todos los campos.');
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      hideLoginScreen();
+    } catch (error) {
+      _showAuthErr(err, mapFirebaseAuthError(error, 'login'));
+    }
+  }
+
+  async function doRegister() {
+    const name = document.getElementById('reg-name')?.value.trim() || '';
+    const email = document.getElementById('reg-email')?.value.trim().toLowerCase() || '';
+    const pass = document.getElementById('reg-pass')?.value || '';
+    const pass2 = document.getElementById('reg-pass2')?.value || '';
+    const err = document.getElementById('reg-err');
+    if (err) err.style.display = 'none';
+
+    if (!name || !email || !pass || !pass2) {
+      _showAuthErr(err, 'Completa todos los campos.');
+      return;
+    }
+    if (!email.includes('@')) {
+      _showAuthErr(err, 'Correo inválido.');
+      return;
+    }
+    if (pass.length < 6) {
+      _showAuthErr(err, 'La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (pass !== pass2) {
+      _showAuthErr(err, 'Las contraseñas no coinciden.');
+      return;
+    }
+
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      await updateProfile(cred.user, { displayName: name });
+      authSetSession(buildSession(auth.currentUser));
+      hideLoginScreen();
+    } catch (error) {
+      _showAuthErr(err, mapFirebaseAuthError(error, 'register'));
+    }
+  }
+
+  async function doGoogleSignIn() {
+    const err = document.getElementById('login-err') || document.getElementById('google-modal-err');
+    if (err) err.style.display = 'none';
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      // Garantiza displayName si Google lo entrega vacío por alguna razón.
+      if (!user.displayName && user.email) {
+        const fallbackName = user.email.split('@')[0];
+        await updateProfile(user, { displayName: fallbackName });
+      }
+
+      authSetSession(buildSession(auth.currentUser));
+      hideLoginScreen();
+    } catch (error) {
+      _showAuthErr(err, mapFirebaseAuthError(error, 'google'));
+    }
+  }
+
+  function closeGoogleModal() {
+    clearGoogleModalIfOpen();
+  }
+
+  async function confirmGoogleSignIn() {
+    // Se conserva por compatibilidad con el HTML actual,
+    // pero ya no se usa el modal manual para autenticar con Google.
+    await doGoogleSignIn();
+  }
+
+  async function doLogout() {
+    if (!confirm('¿Cerrar sesión?')) return;
+    try {
+      await signOut(auth);
+      authClearSession();
+      location.reload();
+    } catch (error) {
+      alert(mapFirebaseAuthError(error, 'logout'));
+    }
+  }
+
+  async function saveCfgProfile() {
+    const name = document.getElementById('cfg-name-input')?.value.trim() || '';
+    const msg = document.getElementById('cfg-profile-msg');
+    if (!name) {
+      if (msg) {
+        msg.style.color = 'var(--red)';
+        msg.textContent = 'El nombre no puede estar vacío.';
+        msg.style.display = 'block';
+        setTimeout(() => msg.style.display = 'none', 2500);
+      }
+      return;
+    }
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      await updateProfile(user, { displayName: name });
+      authSetSession(buildSession(auth.currentUser));
+      const display = document.getElementById('cfg-display-name');
+      if (display) display.textContent = name;
+      if (msg) {
+        msg.style.color = 'var(--green)';
+        msg.textContent = '✓ Nombre actualizado';
+        msg.style.display = 'block';
+        setTimeout(() => msg.style.display = 'none', 2500);
+      }
+    } catch (error) {
+      if (msg) {
+        msg.style.color = 'var(--red)';
+        msg.textContent = mapFirebaseAuthError(error, 'profile');
+        msg.style.display = 'block';
+        setTimeout(() => msg.style.display = 'none', 3000);
+      }
+    }
+  }
+
+  async function saveCfgPassword() {
+    const cur = document.getElementById('cfg-pass-current')?.value || '';
+    const nw = document.getElementById('cfg-pass-new')?.value || '';
+    const conf = document.getElementById('cfg-pass-confirm')?.value || '';
+    const err = document.getElementById('cfg-pass-err');
+    const ok = document.getElementById('cfg-pass-ok');
+    if (err) err.style.display = 'none';
+    if (ok) ok.style.display = 'none';
+
+    const user = auth.currentUser;
+    if (!user) {
+      _show(err, 'No hay sesión activa.');
+      return;
+    }
+    if (!user.email) {
+      _show(err, 'La cuenta actual no tiene correo disponible.');
+      return;
+    }
+    if (authSession?.google) {
+      _show(err, 'Las cuentas de Google no cambian contraseña desde esta pantalla.');
+      return;
+    }
+    if (!cur) {
+      _show(err, 'Escribe tu contraseña actual.');
+      return;
+    }
+    if (nw.length < 6) {
+      _show(err, 'Mínimo 6 caracteres.');
+      return;
+    }
+    if (nw !== conf) {
+      _show(err, 'Las contraseñas no coinciden.');
+      return;
+    }
+
+    try {
+      const credential = EmailAuthProvider.credential(user.email, cur);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, nw);
+
+      const ids = ['cfg-pass-current', 'cfg-pass-new', 'cfg-pass-confirm'];
+      ids.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+      });
+
+      _show(ok, '✓ Contraseña actualizada correctamente');
+    } catch (error) {
+      _show(err, mapFirebaseAuthError(error, 'password'));
+    }
+  }
+
+  // Sobrescribe las funciones viejas del script clásico.
+  window.auth = auth;
+  window.googleProvider = googleProvider;
+  window.authGetSession = authGetSession;
+  window.authSetSession = authSetSession;
+  window.authClearSession = authClearSession;
+  window.authInit = authInit;
+  window.doLogin = doLogin;
+  window.doRegister = doRegister;
+  window.doGoogleSignIn = doGoogleSignIn;
+  window.confirmGoogleSignIn = confirmGoogleSignIn;
+  window.closeGoogleModal = closeGoogleModal;
+  window.hideLoginScreen = hideLoginScreen;
+  window._showAuthErr = _showAuthErr;
+  window.doLogout = doLogout;
+  window.saveCfgProfile = saveCfgProfile;
+  window.saveCfgPassword = saveCfgPassword;
+
+  // Compatibilidad: estas funciones ya no deben usarse.
+  window._fbGetUser = async () => null;
+  window._fbSetUser = async () => null;
+
+  // Inicializa el estado real de autenticación.
+  await authInit();
+</script>
+
 <div id="pub-toast" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:white;padding:10px 18px;border-radius:99px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;">
   ⚠ Completa todos los checks antes de publicar
 </div>
