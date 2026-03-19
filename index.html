@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;} button,a,[onclick]{touch-action:manipulation;}
 :root{
   --bg:#f7f6f3;--bg2:#eeedea;--white:#fff;
   --text:#18181b;--text2:#52525b;--text3:#a1a1aa;--text4:#d4d4d8;
@@ -355,7 +355,7 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',system-ui,s
   /* SHELL — sin margen lateral, padding inferior para el nav */
   .shell{
     margin-left:0 !important;
-    padding-bottom:70px; /* espacio para nav mobile (56px) + margen extra */
+    padding-bottom:80px; /* espacio para nav mobile (68px) + margen extra */
     width:100%;
     overflow-x:hidden;
   }
@@ -365,7 +365,7 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',system-ui,s
   #view-ep-profile,
   #view-sim-profile{
     margin-left:0 !important;
-    padding-bottom:70px;
+    padding-bottom:80px;
   }
 
   /* Evitar scroll doble */
@@ -374,7 +374,7 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',system-ui,s
 
   /* PREVIEW — altura correcta restando el nav mobile */
   #view-preview.active{
-    height:calc(100vh - 56px);
+    height:calc(100vh - 68px);
     overflow:hidden;
     display:flex;
     flex-direction:column;
@@ -444,8 +444,8 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',system-ui,s
 }
 
 /* MOBILE NAV */
-#mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--white);border-top:1px solid var(--border);height:56px;align-items:stretch;box-shadow:0 -2px 10px rgba(0,0,0,.06);}
-.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;border:none;background:none;padding:4px 2px 5px;color:var(--text3);transition:color .12s;font-family:'Montserrat',sans-serif;font-size:6.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;min-width:0;overflow:hidden;}
+#mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--white);border-top:1px solid var(--border);height:68px;align-items:stretch;box-shadow:0 -2px 12px rgba(0,0,0,.08);padding-bottom:env(safe-area-inset-bottom,6px);}
+.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:none;padding:10px 2px 4px;color:var(--text3);transition:color .12s;font-family:'Montserrat',sans-serif;font-size:6.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;min-width:0;overflow:hidden;}
 .mob-nav-item.active{color:var(--accent);}
 .mob-nav-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .mob-nav-item.active svg{stroke:var(--accent);}
@@ -575,7 +575,7 @@ input::placeholder,textarea::placeholder{color:var(--text3);opacity:.85;}
   #view-sim-profile .page,
   #view-ep-profile .page,
   #view-ep-edit .ep-edit-wrap{
-    padding-bottom:80px !important;
+    padding-bottom:84px !important;
   }
 }
 
@@ -631,14 +631,8 @@ input::placeholder,textarea::placeholder{color:var(--text3);opacity:.85;}
       <svg class="sid-icon" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,9 16,12 10,15"/></svg>
       <span class="sid-label">Episodios</span><span class="sid-tooltip">Episodios</span>
     </div>
-    <div class="sid-item" id="nav-tareas" data-view="tareas" data-label="Tareas">
-      <svg class="sid-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      <span class="sid-label">Tareas</span><span class="sid-tooltip">Tareas</span>
-    </div>
-    <div class="sid-item" id="nav-preview" data-view="preview" data-label="Vista previa">
-      <svg class="sid-icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-      <span class="sid-label">Preview</span><span class="sid-tooltip">Preview</span>
-    </div>
+
+
     <div class="sid-item" id="nav-configuracion" data-view="configuracion" data-label="Configuración">
       <svg class="sid-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       <span class="sid-label">Config.</span><span class="sid-tooltip">Configuración</span>
@@ -664,6 +658,18 @@ input::placeholder,textarea::placeholder{color:var(--text3);opacity:.85;}
         <span id="dash-logo-ph">🎙️</span>
       </div>
     </div>
+  </div>
+
+  <!-- ACCESOS RÁPIDOS -->
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button onclick="showV('preview',null)" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 14px;background:var(--text);color:white;border:none;border-radius:var(--r);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em;">
+      <svg style="width:15px;height:15px;stroke:white;fill:none;stroke-width:1.8;" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Vista Previa
+    </button>
+    <button onclick="showV('tareas',null)" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 14px;background:var(--accent);color:white;border:none;border-radius:var(--r);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em;">
+      <svg style="width:15px;height:15px;stroke:white;fill:none;stroke-width:1.8;" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Tareas
+    </button>
   </div>
 
   <!-- MÉTRICAS -->
@@ -4901,18 +4907,12 @@ window.addEventListener('resize', ()=>{
     <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,9 16,12 10,15"/></svg>
     Eps
   </button>
-  <button class="mob-nav-item" id="mob-nav-tareas" onclick="showV('tareas',null)">
-    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    Tareas
-  </button>
+
   <button class="mob-nav-item" id="mob-nav-configuracion" onclick="showV('configuracion',null)">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     Config
   </button>
-  <button class="mob-nav-item" id="mob-nav-preview" onclick="showV('preview',null)">
-    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-    Preview
-  </button>
+
 </nav>
 
 
