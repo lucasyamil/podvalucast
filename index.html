@@ -1,221 +1,207 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>PodPlan</title>
+  <meta charset="UTF-8" />
+  <title>PodPlan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-/* ===== MOBILE FIRST RESET ===== */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #0f172a;
-  color: #fff;
-}
+  <!-- Firebase SDK (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      updateProfile,
+      onAuthStateChanged,
+      signOut,
+      EmailAuthProvider,
+      reauthenticateWithCredential,
+      updatePassword
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* ===== TOPBAR ===== */
-.topbar {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  padding: env(safe-area-inset-top) 16px 12px;
-  background: #020617;
-  z-index: 10;
-  text-align: center;
-  font-weight: 600;
-}
+    // ================================
+    // 🔥 CONFIG FIREBASE
+    // ================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1A3M7jpH-mbFoW2ETneOyVhUKM1VIppk",
+      authDomain: "plan-podcast.firebaseapp.com",
+      databaseURL: "https://plan-podcast-default-rtdb.firebaseio.com",
+      projectId: "plan-podcast",
+      storageBucket: "plan-podcast.firebasestorage.app",
+      messagingSenderId: "479892816401",
+      appId: "1:479892816401:web:581d4a07a31872660c67b0",
+      measurementId: "G-NGE8HKFLJE"
+    };
 
-/* ===== MAIN ===== */
-main {
-  padding: 80px 16px 90px;
-}
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
 
-/* ===== INPUTS ===== */
-input, button {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  margin-bottom: 10px;
-  font-size: 16px;
-}
+    const googleProvider = new GoogleAuthProvider();
 
-input {
-  background: #1e293b;
-  color: #fff;
-}
+    // ================================
+    // 🔐 AUTH INIT
+    // ================================
+    function authInit() {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          console.log("Usuario autenticado:", user);
 
-button {
-  background: #22c55e;
-  color: #000;
-  font-weight: bold;
-}
+          // Aquí puedes ocultar login y mostrar app
+          document.getElementById("auth-screen").style.display = "none";
+          document.getElementById("app").style.display = "block";
 
-/* ===== CARD ===== */
-.card {
-  background: #1e293b;
-  padding: 16px;
-  border-radius: 16px;
-  margin-bottom: 12px;
-}
+          // Ejemplo de uso
+          document.getElementById("userName").innerText =
+            user.displayName || user.email;
 
-/* ===== BOTTOM NAV ===== */
-.nav {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  padding: 10px;
-  background: #020617;
-  display: flex;
-  justify-content: space-around;
-}
+        } else {
+          console.log("No hay sesión");
 
-.nav button {
-  background: none;
-  color: #fff;
-  font-size: 12px;
-}
+          document.getElementById("auth-screen").style.display = "block";
+          document.getElementById("app").style.display = "none";
+        }
+      });
+    }
 
-/* ===== LOGIN ===== */
-.auth {
-  max-width: 400px;
-  margin: auto;
-}
+    // ================================
+    // 🔑 LOGIN EMAIL
+    // ================================
+    window.doLogin = async function () {
+      const email = document.getElementById("loginEmail").value;
+      const pass = document.getElementById("loginPass").value;
 
-.hidden { display: none; }
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        showError(err.message);
+      }
+    };
 
-</style>
+    // ================================
+    // 🧾 REGISTER
+    // ================================
+    window.doRegister = async function () {
+      const name = document.getElementById("regName").value;
+      const email = document.getElementById("regEmail").value;
+      const pass = document.getElementById("regPass").value;
+
+      try {
+        const res = await createUserWithEmailAndPassword(auth, email, pass);
+
+        await updateProfile(res.user, {
+          displayName: name
+        });
+
+      } catch (err) {
+        showError(err.message);
+      }
+    };
+
+    // ================================
+    // 🔵 GOOGLE LOGIN
+    // ================================
+    window.doGoogleSignIn = async function () {
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch (err) {
+        showError(err.message);
+      }
+    };
+
+    // ================================
+    // 🚪 LOGOUT
+    // ================================
+    window.doLogout = async function () {
+      await signOut(auth);
+    };
+
+    // ================================
+    // 🔐 CAMBIO PASSWORD
+    // ================================
+    window.changePassword = async function () {
+      const user = auth.currentUser;
+
+      const oldPass = document.getElementById("oldPass").value;
+      const newPass = document.getElementById("newPass").value;
+
+      try {
+        const cred = EmailAuthProvider.credential(user.email, oldPass);
+        await reauthenticateWithCredential(user, cred);
+
+        await updatePassword(user, newPass);
+
+        alert("Contraseña actualizada");
+      } catch (err) {
+        showError(err.message);
+      }
+    };
+
+    function showError(msg) {
+      const el = document.getElementById("authError");
+      if (el) {
+        el.innerText = msg;
+      } else {
+        alert(msg);
+      }
+    }
+
+    // ================================
+    // 🚀 INIT
+    // ================================
+    window.addEventListener("DOMContentLoaded", authInit);
+  </script>
+
+  <style>
+    body { font-family: Arial; }
+    #app { display:none; }
+    .box { max-width:400px; margin:auto; padding:20px; }
+  </style>
 </head>
 
 <body>
 
-<div class="topbar" id="title">PodPlan</div>
+  <!-- ============================= -->
+  <!-- AUTH UI -->
+  <!-- ============================= -->
+  <div id="auth-screen" class="box">
+    <h2>Login</h2>
 
-<main>
+    <input id="loginEmail" placeholder="Email"><br><br>
+    <input id="loginPass" type="password" placeholder="Password"><br><br>
 
-<!-- LOGIN -->
-<div id="authView" class="auth">
-  <h2>Iniciar sesión</h2>
-  <input id="loginEmail" placeholder="Email">
-  <input id="loginPass" type="password" placeholder="Contraseña">
-  <button onclick="doLogin()">Entrar</button>
-  <button onclick="doGoogleSignIn()">Google</button>
+    <button onclick="doLogin()">Iniciar sesión</button>
+    <button onclick="doGoogleSignIn()">Google</button>
 
-  <h3>Registrarse</h3>
-  <input id="regName" placeholder="Nombre">
-  <input id="regEmail" placeholder="Email">
-  <input id="regPass" type="password" placeholder="Contraseña">
-  <button onclick="doRegister()">Crear cuenta</button>
-</div>
+    <h3>Registro</h3>
 
-<!-- APP -->
-<div id="appView" class="hidden">
+    <input id="regName" placeholder="Nombre"><br><br>
+    <input id="regEmail" placeholder="Email"><br><br>
+    <input id="regPass" type="password" placeholder="Password"><br><br>
 
-  <div class="card">
-    <h3 id="userName"></h3>
-    <p id="userEmail"></p>
-    <button onclick="doLogout()">Cerrar sesión</button>
+    <button onclick="doRegister()">Registrarse</button>
+
+    <p id="authError" style="color:red;"></p>
   </div>
 
-</div>
+  <!-- ============================= -->
+  <!-- APP -->
+  <!-- ============================= -->
+  <div id="app" class="box">
+    <h2>Bienvenido</h2>
+    <p id="userName"></p>
 
-</main>
+    <button onclick="doLogout()">Cerrar sesión</button>
 
-<div class="nav">
-  <button onclick="setView('home')">Home</button>
-  <button onclick="setView('profile')">Perfil</button>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  updateProfile,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-/* ===== FIREBASE CONFIG ===== */
-const firebaseConfig = {
-  apiKey: "AIzaSyB1A3M7jpH-mbFoW2ETneOyVhUKM1VIppk",
-  authDomain: "plan-podcast.firebaseapp.com",
-  databaseURL: "https://plan-podcast-default-rtdb.firebaseio.com",
-  projectId: "plan-podcast",
-  storageBucket: "plan-podcast.firebasestorage.app",
-  messagingSenderId: "479892816401",
-  appId: "1:479892816401:web:581d4a07a31872660c67b0",
-  measurementId: "G-NGE8HKFLJE"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
-
-/* ===== AUTH INIT ===== */
-onAuthStateChanged(auth, user => {
-  if (user) {
-    document.getElementById("authView").classList.add("hidden");
-    document.getElementById("appView").classList.remove("hidden");
-
-    document.getElementById("userName").innerText = user.displayName || "Usuario";
-    document.getElementById("userEmail").innerText = user.email;
-  } else {
-    document.getElementById("authView").classList.remove("hidden");
-    document.getElementById("appView").classList.add("hidden");
-  }
-});
-
-/* ===== LOGIN ===== */
-window.doLogin = async () => {
-  const email = loginEmail.value;
-  const pass = loginPass.value;
-
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch (e) {
-    alert(e.message);
-  }
-};
-
-/* ===== REGISTER ===== */
-window.doRegister = async () => {
-  const name = regName.value;
-  const email = regEmail.value;
-  const pass = regPass.value;
-
-  try {
-    const res = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(res.user, { displayName: name });
-  } catch (e) {
-    alert(e.message);
-  }
-};
-
-/* ===== GOOGLE ===== */
-window.doGoogleSignIn = async () => {
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    alert(e.message);
-  }
-};
-
-/* ===== LOGOUT ===== */
-window.doLogout = async () => {
-  await signOut(auth);
-};
-
-/* ===== NAV ===== */
-window.setView = (v) => {
-  document.getElementById("title").innerText = v.toUpperCase();
-};
-
-</script>
+    <h3>Cambiar contraseña</h3>
+    <input id="oldPass" type="password" placeholder="Actual"><br><br>
+    <input id="newPass" type="password" placeholder="Nueva"><br><br>
+    <button onclick="changePassword()">Actualizar</button>
+  </div>
 
 </body>
 </html>
