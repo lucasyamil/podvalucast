@@ -355,7 +355,7 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',system-ui,s
   /* SHELL — sin margen lateral, padding inferior para el nav */
   .shell{
     margin-left:0 !important;
-    padding-bottom:80px; /* espacio para nav mobile (68px) + margen extra */
+    padding-bottom:90px;
     width:100%;
     overflow-x:hidden;
   }
@@ -365,7 +365,7 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',system-ui,s
   #view-ep-profile,
   #view-sim-profile{
     margin-left:0 !important;
-    padding-bottom:80px;
+    padding-bottom:90px;
   }
 
   /* Evitar scroll doble */
@@ -374,7 +374,7 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',system-ui,s
 
   /* PREVIEW — altura correcta restando el nav mobile */
   #view-preview.active{
-    height:calc(100vh - 68px);
+    height:calc(100vh - 78px);
     overflow:hidden;
     display:flex;
     flex-direction:column;
@@ -444,10 +444,10 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',system-ui,s
 }
 
 /* MOBILE NAV */
-#mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--white);border-top:1px solid var(--border);height:68px;align-items:stretch;box-shadow:0 -2px 12px rgba(0,0,0,.08);padding-bottom:env(safe-area-inset-bottom,6px);}
-.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:none;padding:10px 2px 4px;color:var(--text3);transition:color .12s;font-family:'Montserrat',sans-serif;font-size:6.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;min-width:0;overflow:hidden;}
+#mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--white);border-top:1px solid var(--border);height:auto;min-height:64px;align-items:stretch;box-shadow:0 -2px 12px rgba(0,0,0,.08);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px);}
+.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;padding:12px 0 0;min-width:0;color:var(--text3);transition:color .12s;font-family:'Montserrat',sans-serif;font-size:8px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;overflow:hidden;}
 .mob-nav-item.active{color:var(--accent);}
-.mob-nav-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.mob-nav-item svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .mob-nav-item.active svg{stroke:var(--accent);}
 
 /* ══════ LOGIN SCREEN ══════ */
@@ -563,7 +563,7 @@ input::placeholder,textarea::placeholder{color:var(--text3);opacity:.85;}
   #id-panel-checks .card{padding:10px 12px;}
 
   /* CONFIGURACIÓN — padding bottom extra */
-  #view-configuracion .page{padding-bottom:80px;}
+  #view-configuracion .page{padding-bottom:90px;}
 
   /* Preview scroll táctil suave */
   #prev-yt,#prev-sp{-webkit-overflow-scrolling:touch;}
@@ -4980,7 +4980,7 @@ window.addEventListener('resize', ()=>{
         <div class="login-err" id="reg-err"></div>
       </div>
 
-      <button class="login-skip" onclick="skipLogin()">Continuar sin cuenta →</button>
+      
     </div>
   </div>
 </div>
@@ -5185,7 +5185,7 @@ window.doLogout        = doLogout;
 window.saveCfgProfile  = saveCfgProfile;
 window.saveCfgPassword = saveCfgPassword;
 window.loadCfgView     = loadCfgView;
-window.skipLogin       = () => { const ls=document.getElementById('login-screen'); if(ls){ls.style.opacity='0';ls.style.transition='opacity .4s';setTimeout(()=>ls.classList.add('hidden'),400);} };
+
 window.switchAuthTab   = (tab) => {
   document.getElementById('auth-login-form').style.display    = tab==='login'?'block':'none';
   document.getElementById('auth-register-form').style.display = tab==='register'?'block':'none';
